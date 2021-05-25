@@ -11,4 +11,4 @@ Will produce the following hash:
 
 ---
 
-:warning Don't use this in production! This code has not been battle tested, and is by no means the most efficient implementation
+:warning: Don't use this in production! This code has not been battle tested, and is by no means the most efficient implementation
