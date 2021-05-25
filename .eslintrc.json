@@ -1,0 +1,26 @@
+{
+  "extends": "airbnb-typescript/base",
+  "parserOptions": {
+    "project": "./tsconfig.json"
+  },
+  "rules": {
+    "global-require": "off",
+    "func-names": "off",
+    "import/prefer-default-export": "off",
+    "no-console": "off",
+    "@typescript-eslint/lines-between-class-members": ["error", "always", { "exceptAfterSingleLine": true }],
+    "@typescript-eslint/indent": ["error", 2, { "FunctionExpression": { "parameters": 2 } }],
+    "function-paren-newline": ["error", { "minItems": 3 }],
+    "max-classes-per-file": "off",
+    "newline-per-chained-call": ["error", { "ignoreChainWithDepth": 2 }],
+    "@typescript-eslint/explicit-function-return-type": "off",
+    "@typescript-eslint/typedef": ["error", { "parameter":  true }],
+    "no-param-reassign": "off",
+    "@typescript-eslint/no-unused-vars": "off",
+    "class-methods-use-this": "off",
+    "no-plusplus": "off",
+    "max-len": "off",
+    "no-unused-vars": "off",
+    "no-bitwise": "off"
+  }
+}
