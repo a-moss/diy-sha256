@@ -138,7 +138,7 @@ function generateConstants(primeNumbers: number[], calculationFn: (num: number) 
  * @param b
  */
 function xor(a: string, b: string) {
-  return ((parseInt(a, 2) ^ parseInt(b, 2)) >>> 0).toString(2);
+  return ((parseInt(a, 2) ^ parseInt(b, 2)) >>> 0).toString(2).padStart(32, '0');
 }
 
 /**
@@ -176,14 +176,42 @@ function ror(
   return rotatedBits.padStart(value.length, '0');
 }
 
+/**
+ * Helper function which performs a bitwise AND operation on the inputted strings.
+ *
+ * @param a
+ * @param b
+ */
 function bitAnd(a: string, b: string) {
   return ((parseInt(a, 2) & parseInt(b, 2)) >>> 0).toString(2).padStart(a.length, '0');
 }
 
+/**
+ * Helper function to convert a string of bits from one base to another.
+ *
+ * @param num
+ * @param fromBase
+ * @param toBase
+ */
 function convertNum(
   num: string, fromBase: number = 16, toBase: number = 2,
 ): string {
-  return parseInt(num, fromBase).toString(toBase);
+  const parsed = parseInt(num, fromBase).toString(toBase);
+  if (toBase === 2) {
+    return parsed.padStart(32, '0');
+  }
+  return parsed;
+}
+
+/**
+ * Adds multiple values together using mod2^32 arithmetic. Returns the value as a string of bits
+ *
+ * @param values
+ */
+function mod232Adder(...values: string[]): string {
+  const result = values.reduce((acc, curr) => ((parseInt(acc, 2) + parseInt(curr, 2)) >>> 0).toString(2));
+
+  return result.padStart(32, '0');
 }
 
 // TODO: make this work with n 512 bit blocks
@@ -202,7 +230,7 @@ function entry() {
   const padded = padTo512(binary);
 
   // STEP 3: Generate constants
-  let [
+  const [
     h0, h1, h2, h3, h4, h5, h6, h7,
   ] = generateConstants(calculatePrimeNumbers(8), Math.sqrt);
 
@@ -225,9 +253,9 @@ function entry() {
     const s1Xor1 = xor(ror(words[i - 2], 17), ror(words[i - 2], 19));
     const s1 = xor(s1Xor1, rs(words[i - 2], 10));
 
-    // TODO: the division can be replaced with a simple AND ('&') operation: 'x mod 2n' is equivalent to 'x & (2n - 1). division is slow, bitwise operation is speedy... we may
-    // also be able to just do a >>> 0 at the end of this addition to convert it to an unsigned 32 bit, since overflow/wrapping will be taken care of
-    words[i] = ((parseInt(words[i - 16], 2) + parseInt(s0, 2) + parseInt(words[i - 7], 2) + parseInt(s1, 2)) % (2 ** 32)).toString(2).padStart(32, '0');
+    words[i] = mod232Adder(
+      words[i - 16], s0, words[i - 7], s1,
+    );
   }
 
   // Step 6: Compression
@@ -240,47 +268,48 @@ function entry() {
     f,
     g,
     h,
-  ] = [h0, h1, h2, h3, h4, h5, h6, h7].map((hash) => convertNum(h0));
+  ] = [h0, h1, h2, h3, h4, h5, h6, h7].map((hash) => convertNum(hash));
 
   for (let i = 0; i < words.length; i++) {
     const s1Xor1 = xor(ror(e, 6), ror(e, 11));
     const s1 = xor(s1Xor1, ror(e, 25));
 
-    // TODO: figure out good way to parseInt these strings, perform bitwise, and return as unsigned ints
     const ch = xor(bitAnd(e, f), bitAnd((~parseInt(e, 2)).toString(2), g));
 
-    // TODO: don't forget to do mod2^32 arithmetic
-    const temp1 = (parseInt(h, 2) + parseInt(s1, 2) + parseInt(ch, 2) + parseInt(convertNum(kConstants[i]), 2) + parseInt(words[i], 2)) % (2 ** 32);
+    const temp1 = mod232Adder(
+      h, s1, ch, convertNum(kConstants[i]), words[i],
+    );
 
     const s0Xor1 = xor(ror(a, 2), ror(a, 13));
     const s0 = xor(s0Xor1, ror(a, 22));
 
     const majXor1 = xor(bitAnd(a, b), bitAnd(a, c));
     const maj = xor(majXor1, bitAnd(b, c));
-    const temp2 = (parseInt(s0, 2) + parseInt(maj, 2)) % (2 ** 32);
+    const temp2 = mod232Adder(s0, maj);
 
     h = g;
     g = f;
     f = e;
-    e = ((parseInt(d, 2) + temp1) % (2 ** 32)).toString(2);
+    e = mod232Adder(d, temp1);
     d = c;
     c = b;
     b = a;
-    a = ((temp1 + temp2) % (2 ** 32)).toString(2);
+    a = mod232Adder(temp1, temp2);
   }
 
   // Step 7: Update hashes
-  h0 += a;
-  h1 += b;
-  h2 += c;
-  h3 += d;
-  h4 += e;
-  h5 += f;
-  h6 += g;
-  h6 += h;
+  let hashedString = '';
+  const indexedWorkingVars = [a, b, c, d, e, f, g, h];
+  [h0, h1, h2, h3, h4, h5, h6, h7].forEach((value: string, index: number) => {
+    // The nested convertNum function converts the hash values from hex to binary, so they can be added to the working vars
+    // The second convertNum function converts the binary result from addition back to hex for the final hash
+    hashedString += convertNum(
+      mod232Adder(convertNum(value), indexedWorkingVars[index]), 2, 16,
+    );
+  });
 
   // Step 8: Output final hash
-  console.log(`Hashed string: ${h0 + h1 + h2 + h3 + h4 + h5 + h6 + h7}`);
+  console.log(`Hashed string:   ${(h0 + h1 + h2 + h3 + h4 + h5 + h6 + h7).toUpperCase()}`);
 }
 
 entry();

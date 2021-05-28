@@ -10,5 +10,5 @@
     "strictPropertyInitialization": false,
     "allowSyntheticDefaultImports": true
   },
-  "compileOnSave": true,
+  "compileOnSave": false
 }
