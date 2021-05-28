@@ -3,7 +3,7 @@
 
 ---
 I was curious about how SHA-256 worked under the hood. After researching it more, it seemed like a fun algorithm to try and
-recreate. I explicitly chose Node as a challenge, since it's not a low-level language known for bit manipulation.
+recreate. I explicitly chose Node.js as a challenge, since JS is not a low-level language known for bit manipulation.
 
 Currently, the project just works with text string input. For example:
 
