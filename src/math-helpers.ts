@@ -49,7 +49,7 @@ function generateConstants(primeNumbers: number[], calculationFn: (num: number) 
     const fractionalValue = (sqrt % 1) * (16 ** 8);
     const hex = Math.trunc(fractionalValue).toString(16);
 
-    hashes.push(hex);
+    hashes.push(hex.padStart(8, '0'));
   });
 
   return hashes;
@@ -66,8 +66,11 @@ function convertNum(
   num: string, fromBase: number = 16, toBase: number = 2,
 ): string {
   const parsed = parseInt(num, fromBase).toString(toBase);
+  // TODO: Make the padding here less rigid
   if (toBase === 2) {
     return parsed.padStart(32, '0');
+  } if (toBase === 16) {
+    return parsed.padStart(8, '0');
   }
   return parsed;
 }

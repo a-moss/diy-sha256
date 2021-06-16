@@ -44,11 +44,12 @@ function asciiToBinary(input: number[]): string[] {
 function chunkString(
   input: string, chunkSize: number, pad: boolean = true,
 ): string[] {
-  if (pad) {
-    input = input.padStart(input.length + (chunkSize - (input.length % chunkSize)), '0');
-  }
   if (input.length % chunkSize !== 0) {
-    throw new Error(`Failed to convert bits to bytes. Not a multiple of ${chunkSize}`);
+    if (pad) {
+      input = input.padStart(input.length + (chunkSize - (input.length % chunkSize)), '0');
+    } else {
+      throw new Error(`Failed to convert bits to bytes. Not a multiple of ${chunkSize}`);
+    }
   }
   const inputCharArray = [...input];
   const bytes = Array(input.length / chunkSize);
@@ -195,7 +196,12 @@ function entry() {
   });
 
   // Step 8: Output final hash
-  console.log(`Hashed string:   ${(h0 + h1 + h2 + h3 + h4 + h5 + h6 + h7).toUpperCase()}`);
+  console.log(`Hashed string:   ${(hashedString).toUpperCase()}`);
 }
 
 entry();
+
+export const testables = {
+  textToAscii,
+  asciiToBinary,
+};
